@@ -9,7 +9,7 @@ var map = new ol.Map({
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([255039.334656, 6250001.988452, 256501.050054, 6251223.513322], map.getSize());
+map.getView().fit([254870.347784, 6249499.523807, 256880.748314, 6251332.236538], map.getSize());
 
 ////controls container
 
@@ -424,6 +424,76 @@ var bottomRightContainerDiv = document.getElementById('bottom-right-container')
 
 //geolocate
 
+isTracking = false;
+var geolocateControl = (function (Control) {
+    geolocateControl = function(opt_options) {
+        var options = opt_options || {};
+        var button = document.createElement('button');
+        button.className += ' fa fa-map-marker';
+        var handleGeolocate = function() {
+            if (isTracking) {
+                map.removeLayer(geolocateOverlay);
+                isTracking = false;
+          } else if (geolocation.getTracking()) {
+                map.addLayer(geolocateOverlay);
+                map.getView().setCenter(geolocation.getPosition());
+                isTracking = true;
+          }
+        };
+        button.addEventListener('click', handleGeolocate, false);
+        button.addEventListener('touchstart', handleGeolocate, false);
+        var element = document.createElement('div');
+        element.className = 'geolocate ol-unselectable ol-control';
+        element.appendChild(button);
+        ol.control.Control.call(this, {
+            element: element,
+            target: options.target
+        });
+    };
+    if (Control) geolocateControl.__proto__ = Control;
+    geolocateControl.prototype = Object.create(Control && Control.prototype);
+    geolocateControl.prototype.constructor = geolocateControl;
+    return geolocateControl;
+}(ol.control.Control));
+map.addControl(new geolocateControl())
+
+      var geolocation = new ol.Geolocation({
+  projection: map.getView().getProjection()
+});
+
+
+var accuracyFeature = new ol.Feature();
+geolocation.on('change:accuracyGeometry', function() {
+  accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+});
+
+var positionFeature = new ol.Feature();
+positionFeature.setStyle(new ol.style.Style({
+  image: new ol.style.Circle({
+    radius: 6,
+    fill: new ol.style.Fill({
+      color: '#3399CC'
+    }),
+    stroke: new ol.style.Stroke({
+      color: '#fff',
+      width: 2
+    })
+  })
+}));
+
+geolocation.on('change:position', function() {
+  var coordinates = geolocation.getPosition();
+  positionFeature.setGeometry(coordinates ?
+      new ol.geom.Point(coordinates) : null);
+});
+
+var geolocateOverlay = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    features: [accuracyFeature, positionFeature]
+  })
+});
+
+geolocation.setTracking(true);
 
 
 //measurement

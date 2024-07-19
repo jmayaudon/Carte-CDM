@@ -3,7 +3,7 @@ var placement = 'point';
 function categories_TrocCDMArbresremarquables_1(feature, value, size, resolution, labelText,
                        labelFont, labelFill, bufferColor, bufferWidth,
                        placement) {
-                switch(value.toString()) {case 'CDM':
+                switch(value.toString()) {case 'ACM':
                     return [ new ol.style.Style({
         image: new ol.style.Icon({
                   imgSize: [580, 580],
